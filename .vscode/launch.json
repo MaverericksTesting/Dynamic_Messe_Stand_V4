@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "🐍 Debug Python GUI",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/Python_GUI/Bertrandt_GUI.py",
+            "args": ["--esp32-port=/dev/ttyUSB0"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/Python_GUI"
+            },
+            "justMyCode": false
+        },
+        {
+            "name": "🔧 Debug CLI Monitor",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/cli_monitor.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "justMyCode": false
+        }
+    ]
+}

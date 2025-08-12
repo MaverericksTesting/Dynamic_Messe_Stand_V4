@@ -1,0 +1,49 @@
+{
+    "folders": [
+        {
+            "name": "🚀 Dynamic Messe Stand V2",
+            "path": "."
+        }
+    ],
+    "settings": {
+        "python.defaultInterpreterPath": "/usr/bin/python3",
+        "python.terminal.activateEnvironment": false,
+        "files.associations": {
+            "*.ino": "cpp"
+        },
+        "arduino.path": "/usr/bin/arduino-cli",
+        "arduino.useArduinoCli": true,
+        "C_Cpp.default.includePath": [
+            "${workspaceFolder}/Arduino/**",
+            "~/.arduino15/packages/**"
+        ]
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "ms-vscode.cpptools", 
+            "vsciot-vscode.vscode-arduino",
+            "ms-python.black-formatter",
+            "ms-python.pylint"
+        ]
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "🚀 Start Complete System",
+                "type": "shell",
+                "command": "./start_system.sh",
+                "group": {
+                    "kind": "build",
+                    "isDefault": true
+                },
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "panel": "new"
+                }
+            }
+        ]
+    }
+}

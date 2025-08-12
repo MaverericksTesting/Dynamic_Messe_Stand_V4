@@ -1,0 +1,38 @@
+{
+    "python.defaultInterpreterPath": "/usr/bin/python3",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "black",
+    "files.associations": {
+        "*.ino": "cpp"
+    },
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/Arduino/**",
+        "~/.arduino15/packages/esp32/hardware/esp32/*/cores/esp32",
+        "~/.arduino15/packages/esp32/hardware/esp32/*/libraries/**",
+        "~/.arduino15/packages/arduino/hardware/mbed_giga/*/cores/arduino",
+        "~/.arduino15/packages/arduino/hardware/mbed_giga/*/libraries/**"
+    ],
+    "C_Cpp.default.defines": [
+        "ARDUINO=10819",
+        "ESP32",
+        "ARDUINO_ESP32_DEV"
+    ],
+    "arduino.path": "/usr/bin/arduino-cli",
+    "arduino.commandPath": "arduino-cli",
+    "arduino.useArduinoCli": true,
+    "arduino.logLevel": "info",
+    "files.exclude": {
+        "**/.git": true,
+        "**/node_modules": true,
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/archive": true,
+        "**/tools": true
+    },
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+        "*.ino": "${capture}.cpp, ${capture}.h",
+        "README.md": "*.md"
+    }
+}

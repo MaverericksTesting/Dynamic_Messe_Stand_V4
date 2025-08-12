@@ -1,0 +1,524 @@
+// Bertrandt Content Creator Theme - Modernes Corporate Styling
+:root {
+  // 🎨 Bertrandt Farbpalette (angepasst an aktuelle Kasten-Farben)
+  
+  // Haupt-Hintergründe
+  --background-primary: #FFFFFF;
+  --background-secondary: rgba(210, 224, 232, 0.9); // Kasten 4 mit Transparenz
+  --background-tertiary: rgba(147, 177, 191, 0.85); // Kasten 3 mit Tiefe
+  
+  // Text-Farben
+  --text-primary: #000000;
+  --text-secondary: #333333; // dunkler für bessere Lesbarkeit
+  
+  // Kasten-Farben (Bertrandt Corporate)
+  --kasten-1: #3C5A69; // Dunkelstes Blau - Header, aktive Elemente
+  --kasten-2: #44778D; // Mitteldunkles Blau - Buttons, Navigation
+  --kasten-3: #93b1bf; // Mittleres Blau - Hover, inaktive Tabs
+  --kasten-4: #d2e0e8; // Hellstes Blau - Hintergründe, Toolbar
+  
+  // Akzent-Farben (basierend auf Kasten-Farben)
+  --accent-primary: var(--kasten-1);
+  --accent-secondary: var(--kasten-2);
+  --accent-tertiary: var(--kasten-3);
+  
+  // Status-Farben (beibehalten für Funktionalität)
+  --success: #00B050;
+  --warning: #FF8C00;
+  --error: #E60000;
+  
+  // Status Colors für Content Creator
+  --status-draft: #93b1bf;
+  --status-editing: #44778D;
+  --status-complete: #3C5A69;
+  
+  // 📏 Abstände (luftiger für moderne UI)
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 20px;
+  --spacing-lg: 28px;
+  --spacing-xl: 40px;
+  --spacing-xxl: 56px;
+  
+  // 📐 Border Radius (weichere Rundungen)
+  --border-radius-sm: 6px;
+  --border-radius-md: 10px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 24px;
+  
+  // 🌫️ Schatten (subtil für helle UI)
+  --shadow-sm: 0 1px 3px rgba(60, 90, 105, 0.1);
+  --shadow-md: 0 4px 8px rgba(60, 90, 105, 0.12);
+  --shadow-lg: 0 8px 20px rgba(60, 90, 105, 0.15);
+  --shadow-xl: 0 12px 32px rgba(60, 90, 105, 0.18);
+  
+  // 🔤 Typografie (PT Sans basiert)
+  --font-size-xs: 10px;
+  --font-size-sm: 12px;
+  --font-size-md: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-xxl: 32px;
+  
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  // Content Creator spezifische Variablen
+  --sidebar-width: 280px;
+  --properties-width: 250px;
+  --header-height: 100px;
+  --toolbar-height: 60px;
+  --tab-height: 40px;
+}
+
+// Global Styles für Content Creator
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'PT Sans', 'SF Pro Display', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  font-weight: var(--font-weight-normal);
+}
+
+// Utility Classes
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-accent { color: var(--accent-primary); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-error { color: var(--error); }
+
+.bg-primary { background-color: var(--background-primary); }
+.bg-secondary { background-color: var(--background-secondary); }
+.bg-tertiary { background-color: var(--background-tertiary); }
+.bg-kasten-1 { background-color: var(--kasten-1); }
+.bg-kasten-2 { background-color: var(--kasten-2); }
+.bg-kasten-3 { background-color: var(--kasten-3); }
+.bg-kasten-4 { background-color: var(--kasten-4); }
+
+.rounded-sm { border-radius: var(--border-radius-sm); }
+.rounded-md { border-radius: var(--border-radius-md); }
+.rounded-lg { border-radius: var(--border-radius-lg); }
+.rounded-xl { border-radius: var(--border-radius-xl); }
+
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-xl { box-shadow: var(--shadow-xl); }
+
+.p-xs { padding: var(--spacing-xs); }
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+.p-xl { padding: var(--spacing-xl); }
+
+.m-xs { margin: var(--spacing-xs); }
+.m-sm { margin: var(--spacing-sm); }
+.m-md { margin: var(--spacing-md); }
+.m-lg { margin: var(--spacing-lg); }
+.m-xl { margin: var(--spacing-xl); }
+
+// 🎯 Buttons (Bertrandt Style)
+.button-primary {
+  background: linear-gradient(135deg, var(--kasten-1), var(--kasten-2));
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    background: linear-gradient(135deg, var(--kasten-2), var(--kasten-3));
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.button-secondary {
+  background: var(--kasten-4);
+  color: var(--text-primary);
+  border: 1px solid var(--kasten-3);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: var(--kasten-3);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+  }
+}
+
+.button-tool {
+  background: var(--kasten-3);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: var(--kasten-2);
+    transform: scale(1.05);
+  }
+}
+
+// 📋 Karten (Content Creator Cards)
+.slide-card {
+  background: #FFFFFF;
+  border: 1px solid var(--kasten-4);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  &--active {
+    border-color: var(--kasten-1);
+    box-shadow: var(--shadow-md);
+  }
+  
+  &__header {
+    background: var(--kasten-3);
+    color: #FFFFFF;
+    padding: var(--spacing-sm);
+    font-weight: var(--font-weight-medium);
+    
+    &--active {
+      background: var(--kasten-1);
+    }
+  }
+  
+  &__content {
+    padding: var(--spacing-md);
+  }
+}
+
+.properties-card {
+  background: #FFFFFF;
+  border: 1px solid var(--kasten-4);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-md);
+  overflow: hidden;
+  
+  &__header {
+    background: var(--kasten-4);
+    padding: var(--spacing-sm);
+    font-weight: var(--font-weight-medium);
+    border-bottom: 1px solid var(--kasten-3);
+  }
+  
+  &__content {
+    padding: var(--spacing-md);
+  }
+}
+
+// 🏷️ Status-Chips (Content Creator)
+.status-chip {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: var(--border-radius-lg);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  transition: all 0.2s ease;
+  
+  &--draft {
+    background-color: rgba(147, 177, 191, 0.2);
+    color: var(--kasten-3);
+  }
+  
+  &--editing {
+    background-color: rgba(68, 119, 141, 0.2);
+    color: var(--kasten-2);
+  }
+  
+  &--complete {
+    background-color: rgba(60, 90, 105, 0.2);
+    color: var(--kasten-1);
+  }
+}
+
+// Editor Tabs
+.editor-tab {
+  background: var(--kasten-3);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 2px;
+  
+  &:hover {
+    background: var(--kasten-2);
+  }
+  
+  &--active {
+    background: #FFFFFF;
+    color: var(--text-primary);
+    
+    &:hover {
+      background: #FFFFFF;
+    }
+  }
+}
+
+// Toolbar
+.toolbar {
+  background: var(--kasten-4);
+  border-bottom: 1px solid var(--kasten-3);
+  padding: var(--spacing-sm) var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  
+  &__label {
+    font-weight: var(--font-weight-medium);
+    color: var(--text-primary);
+  }
+  
+  &__actions {
+    display: flex;
+    gap: var(--spacing-sm);
+  }
+}
+
+// Navigation Sidebar
+.nav-sidebar {
+  background: var(--kasten-4);
+  border-right: 1px solid var(--kasten-3);
+  width: var(--sidebar-width);
+  height: 100%;
+  overflow-y: auto;
+  
+  &__header {
+    background: var(--kasten-2);
+    color: #FFFFFF;
+    padding: var(--spacing-md);
+    font-weight: var(--font-weight-bold);
+    text-align: center;
+  }
+  
+  &__content {
+    padding: var(--spacing-md);
+  }
+}
+
+// Properties Panel
+.properties-panel {
+  background: var(--kasten-4);
+  border-left: 1px solid var(--kasten-3);
+  width: var(--properties-width);
+  height: 100%;
+  overflow-y: auto;
+  
+  &__header {
+    background: var(--kasten-3);
+    color: #FFFFFF;
+    padding: var(--spacing-md);
+    font-weight: var(--font-weight-bold);
+    text-align: center;
+  }
+  
+  &__content {
+    padding: var(--spacing-md);
+  }
+}
+
+// Input Fields (Bertrandt Style)
+.input-field {
+  background: #FFFFFF;
+  border: 1px solid var(--kasten-3);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--text-primary);
+  font-size: var(--font-size-md);
+  font-family: 'PT Sans', sans-serif;
+  transition: all 0.2s ease;
+  width: 100%;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--kasten-1);
+    box-shadow: 0 0 0 2px rgba(60, 90, 105, 0.1);
+  }
+  
+  &::placeholder {
+    color: var(--text-secondary);
+  }
+}
+
+.textarea-field {
+  @extend .input-field;
+  min-height: 120px;
+  resize: vertical;
+  font-family: 'PT Sans', sans-serif;
+}
+
+// Flexbox Utilities
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-row { flex-direction: row; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-start { justify-content: flex-start; }
+.justify-end { justify-content: flex-end; }
+.flex-1 { flex: 1; }
+.flex-wrap { flex-wrap: wrap; }
+
+// Grid Utilities
+.grid { display: grid; }
+.grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+
+// Content Creator Layout
+.creator-layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr var(--properties-width);
+  grid-template-rows: var(--header-height) var(--toolbar-height) 1fr;
+  height: 100vh;
+  
+  &__header {
+    grid-column: 1 / -1;
+    background: var(--kasten-1);
+    color: #FFFFFF;
+  }
+  
+  &__toolbar {
+    grid-column: 1 / -1;
+    background: var(--kasten-4);
+  }
+  
+  &__sidebar {
+    background: var(--kasten-4);
+    border-right: 1px solid var(--kasten-3);
+  }
+  
+  &__main {
+    background: #FFFFFF;
+    border-left: 1px solid var(--kasten-3);
+    border-right: 1px solid var(--kasten-3);
+  }
+  
+  &__properties {
+    background: var(--kasten-4);
+  }
+}
+
+// Responsive Design
+@media (max-width: 1200px) {
+  .creator-layout {
+    grid-template-columns: 250px 1fr 200px;
+  }
+  
+  :root {
+    --sidebar-width: 250px;
+    --properties-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .creator-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: var(--header-height) var(--toolbar-height) 1fr;
+  }
+  
+  .nav-sidebar,
+  .properties-panel {
+    display: none;
+  }
+  
+  .slide-card {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .button-primary,
+  .button-secondary {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+  }
+}
+
+// Animations
+@keyframes slideIn {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+// Scrollbar Styling
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--kasten-4);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--kasten-3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--kasten-2);
+}

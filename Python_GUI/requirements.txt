@@ -1,0 +1,9 @@
+# Bertrandt ESP32 GUI Requirements
+pyserial>=3.5
+Pillow>=8.0.0
+tkinter-tooltip>=2.0.0
+watchdog>=2.1.0
+
+# Optional development dependencies
+black>=22.0.0
+pylint>=2.12.0
