@@ -1,0 +1,8 @@
+{
+  "title": "BumbleB - Das automatisierte Shuttle",
+  "content": "Schonmal ein automatisiert Shuttle gesehen, das aussieht wie eine Hummel?\n\nShuttle fährt los von Bushaltestelle an Bahnhof",
+  "layout": "text",
+  "background_color": "#FFFFFF",
+  "text_color": "#003366",
+  "signal_id": "page_1"
+}

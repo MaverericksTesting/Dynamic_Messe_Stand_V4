@@ -21,7 +21,7 @@ import json
 class BertrandtGUI:
     def __init__(self, esp32_port=None):
         self.root = tk.Tk()
-        self.root.title("Bertrandt ESP32 Monitor")
+        self.root.title("Dynamic Messe Stand V3 - Bertrandt ESP32 Monitor")
         
         # 16:9 Format für verschiedene Bildschirmgrößen
         screen_width = self.root.winfo_screenwidth()
@@ -49,25 +49,28 @@ class BertrandtGUI:
         self.root.bind('<Escape>', self.exit_fullscreen)
         self.fullscreen = False
         
-        # Modern Clean Design - Minimalistisch & Intuitiv (Inspired by Apple/Google/Notion)
+        # Dark Mode Design - Bertrandt Corporate mit dunklem Theme
         self.colors = {
-            'background_primary': '#FFFFFF',     # Haupthintergrund (sauberes Weiß)
-            'background_secondary': '#F8F9FA',   # Sekundär-Hintergrund (sehr helles Grau)
-            'background_tertiary': '#F1F3F4',    # Karten/Widgets (dezentes Grau)
-            'background_hover': '#E8F0FE',       # Hover-Zustand (sehr helles Blau)
-            'text_primary': '#202124',           # Haupt-Text (fast schwarz, aber weicher)
-            'text_secondary': '#5F6368',         # Sekundär-Text (mittleres Grau)
-            'text_tertiary': '#9AA0A6',          # Tertiär-Text (helles Grau)
-            'accent_primary': '#1A73E8',         # Google Blue (vertrauenswürdig)
-            'accent_secondary': '#34A853',       # Google Green (Erfolg)
-            'accent_tertiary': '#EA4335',        # Google Red (Warnung/Fehler)
-            'accent_warning': '#FBBC04',         # Google Yellow (Warnung)
-            'border_light': '#E8EAED',           # Helle Rahmen
-            'border_medium': '#DADCE0',          # Mittlere Rahmen
-            'shadow': 'rgba(60, 64, 67, 0.15)',  # Weiche Schatten
+            'background_primary': '#1E1E1E',     # Dunkler Haupthintergrund
+            'background_secondary': '#2D2D2D',   # Sekundär-Hintergrund (mittleres Grau)
+            'background_tertiary': '#3A3A3A',    # Karten/Widgets (helleres Grau)
+            'background_hover': '#404040',       # Hover-Zustand (noch heller)
+            'text_primary': '#FFFFFF',           # Haupt-Text (weiß)
+            'text_secondary': '#CCCCCC',         # Sekundär-Text (helles Grau)
+            'text_tertiary': '#999999',          # Tertiär-Text (mittleres Grau)
+            'accent_primary': '#003366',         # Bertrandt Corporate Blue
+            'accent_secondary': '#FF6600',       # Bertrandt Corporate Orange
+            'accent_tertiary': '#DC3545',        # Rot für Warnungen/Fehler
+            'accent_warning': '#FFC107',         # Gelb für Warnungen
+            'border_light': '#404040',           # Helle Rahmen
+            'border_medium': '#555555',          # Mittlere Rahmen
+            'shadow': 'rgba(0, 0, 0, 0.3)',      # Dunkle Schatten
             'bertrandt_blue': '#003366',         # Bertrandt Corporate Blue
             'bertrandt_orange': '#FF6600',       # Bertrandt Corporate Orange
         }
+        
+        # Scale Factor für responsive Design
+        self.scale_factor = min(window_width, window_height) / 1080  # Basis: 1080p
         
         # Modern Typography - Clean & Readable (Cross-platform compatible)
         base_size = min(window_width, window_height) // 60  # Responsive Basis
@@ -84,10 +87,14 @@ class BertrandtGUI:
         
         self.root.configure(bg=self.colors['background_primary'])
         
-        # Serial-Verbindung
-        self.esp32_port = esp32_port or '/dev/ttyUSB0'
-        self.serial_connection = None
-        self.serial_thread = None
+        # Hardware-Verbindungen (Multi-ESP32 Setup)
+        self.esp32_1_port = esp32_port or '/dev/ttyUSB0'  # Haupt-ESP32
+        self.esp32_2_port = '/dev/ttyUSB1'  # ESP32.2 (Addon)
+        self.esp32_3_port = '/dev/ttyUSB2'  # ESP32.3 (Addon)
+        self.giga_port = '/dev/ttyACM0'     # Arduino GIGA
+        
+        self.serial_connections = {}  # Dictionary für alle Verbindungen
+        self.serial_threads = {}      # Dictionary für alle Threads
         self.running = False
         
         # Daten-Queue
@@ -98,18 +105,18 @@ class BertrandtGUI:
         self.client_count = 0
         self.signal_history = []
         
-        # Multimedia-Seiten Definitionen (für Messestand)
+        # Multimedia-Folien Definitionen (für Messestand)
         self.signal_definitions = {
-            1: {'name': 'Willkommen', 'color': self.colors['accent_secondary'], 'icon': '🏠', 'content_type': 'welcome'},
-            2: {'name': 'Unternehmen', 'color': self.colors['bertrandt_blue'], 'icon': '🏢', 'content_type': 'company'},
-            3: {'name': 'Produkte', 'color': self.colors['bertrandt_orange'], 'icon': '⚙️', 'content_type': 'products'},
-            4: {'name': 'Innovation', 'color': self.colors['accent_primary'], 'icon': '💡', 'content_type': 'innovation'},
-            5: {'name': 'Technologie', 'color': self.colors['bertrandt_blue'], 'icon': '🔬', 'content_type': 'technology'},
-            6: {'name': 'Referenzen', 'color': self.colors['accent_secondary'], 'icon': '⭐', 'content_type': 'references'},
-            7: {'name': 'Team', 'color': self.colors['bertrandt_orange'], 'icon': '👥', 'content_type': 'team'},
-            8: {'name': 'Karriere', 'color': self.colors['accent_primary'], 'icon': '🚀', 'content_type': 'career'},
-            9: {'name': 'Kontakt', 'color': self.colors['bertrandt_blue'], 'icon': '📞', 'content_type': 'contact'},
-            10: {'name': 'Danke', 'color': self.colors['accent_secondary'], 'icon': '🙏', 'content_type': 'thanks'}
+            1: {'name': 'Folie1', 'color': self.colors['accent_secondary'], 'icon': '🏠', 'content_type': 'welcome'},
+            2: {'name': 'Folie2', 'color': self.colors['bertrandt_blue'], 'icon': '🏢', 'content_type': 'company'},
+            3: {'name': 'Folie3', 'color': self.colors['bertrandt_orange'], 'icon': '⚙️', 'content_type': 'products'},
+            4: {'name': 'Folie4', 'color': self.colors['accent_primary'], 'icon': '💡', 'content_type': 'innovation'},
+            5: {'name': 'Folie5', 'color': self.colors['bertrandt_blue'], 'icon': '🔬', 'content_type': 'technology'},
+            6: {'name': 'Folie6', 'color': self.colors['accent_secondary'], 'icon': '⭐', 'content_type': 'references'},
+            7: {'name': 'Folie7', 'color': self.colors['bertrandt_orange'], 'icon': '👥', 'content_type': 'team'},
+            8: {'name': 'Folie8', 'color': self.colors['accent_primary'], 'icon': '🚀', 'content_type': 'career'},
+            9: {'name': 'Folie9', 'color': self.colors['bertrandt_blue'], 'icon': '📞', 'content_type': 'contact'},
+            10: {'name': 'Folie10', 'color': self.colors['accent_secondary'], 'icon': '🙏', 'content_type': 'thanks'}
         }
         
         # Multimedia Content Storage
@@ -132,6 +139,9 @@ class BertrandtGUI:
         self.setup_styles()
         self.setup_gui()
         self.setup_serial()
+        
+        # Explizit auf Main Screen (HOME) starten
+        self.root.after(100, self.ensure_main_screen_start)
         
         # GUI ist jetzt vollständig buttonbasiert - keine Tastatur-Shortcuts mehr nötig
         
@@ -280,11 +290,11 @@ class BertrandtGUI:
         left_panel.pack_propagate(False)
         
         # Right Panel - Multimedia Display (90% Breite)
-        right_panel = ttk.Frame(main_frame, style='Card.TFrame')
-        right_panel.pack(side='right', fill='both', expand=True)
+        self.right_panel = ttk.Frame(main_frame, style='Card.TFrame')
+        self.right_panel.pack(side='right', fill='both', expand=True)
         
         self.create_status_panel(left_panel)
-        self.create_multimedia_display(right_panel)
+        self.create_multimedia_display(self.right_panel)
         
         # Footer
         self.create_footer()
@@ -306,7 +316,7 @@ class BertrandtGUI:
         
         # Produktname - Clean Typography
         product_label = tk.Label(logo_frame,
-                                text="ESP32 Monitor",
+                                text="Dynamic Messe Stand V3",
                                 font=self.fonts['title'],
                                 fg=self.colors['bertrandt_blue'],
                                 bg=self.colors['background_primary'])
@@ -314,7 +324,7 @@ class BertrandtGUI:
         
         # Tagline - Subtil
         tagline_label = tk.Label(logo_frame,
-                               text="Engineering tomorrow",
+                               text="Interactive Exhibition System",
                                font=self.fonts['caption'],
                                fg=self.colors['text_tertiary'],
                                bg=self.colors['background_primary'])
@@ -377,21 +387,27 @@ class BertrandtGUI:
         innovation_btn.pack(side='left', padx=2)
         self.nav_buttons[4] = innovation_btn
         
-        # Kontakt Button
-        contact_btn = tk.Button(nav_buttons_frame,
-                 text="Demo",
+        # Demo Button (Stop-Button entfernt)
+        demo_btn = tk.Button(nav_buttons_frame,
+                 text="🤖 Demo",
                  command=self.start_auto_demo,
-                 **nav_btn_style).pack(side='left', padx=4)
+                 **nav_btn_style)
+        demo_btn.pack(side='left', padx=4)
+        self.demo_btn = demo_btn  # Referenz speichern
         
-        tk.Button(nav_buttons_frame,
-                 text="Stop",
-                 command=self.stop_auto_demo,
-                 **nav_btn_style).pack(side='left', padx=4)
-        
-        tk.Button(nav_buttons_frame,
-                 text="Content Creator",
+        creator_btn = tk.Button(nav_buttons_frame,
+                 text="✨ Creator",
                  command=self.show_content_creator,
-                 **nav_btn_style).pack(side='left', padx=4)
+                 **nav_btn_style)
+        creator_btn.pack(side='left', padx=4)
+        self.creator_btn = creator_btn  # Referenz speichern
+        
+        presentation_btn = tk.Button(nav_buttons_frame,
+                 text="🎯 Present",
+                 command=self.show_presentation_mode,
+                 **nav_btn_style)
+        presentation_btn.pack(side='left', padx=4)
+        self.presentation_btn = presentation_btn  # Referenz speichern
         
         # Status & Actions (rechts)
         status_frame = tk.Frame(header_frame, bg=self.colors['background_primary'])
@@ -505,8 +521,8 @@ class BertrandtGUI:
         conn_card = tk.Frame(parent, bg=self.colors['background_tertiary'], relief='flat', borderwidth=1)
         conn_card.pack(fill='x', padx=2, pady=3)
         
-        # Sehr kompakter Header
-        conn_header = tk.Frame(conn_card, bg=self.colors['accent_primary'], height=20)
+        # Sehr kompakter Header - dunkler
+        conn_header = tk.Frame(conn_card, bg=self.colors['background_secondary'], height=20)
         conn_header.pack(fill='x')
         conn_header.pack_propagate(False)
         
@@ -514,7 +530,7 @@ class BertrandtGUI:
                 text="🔗",
                 font=('Helvetica Neue', 10),
                 fg=self.colors['text_primary'],
-                bg=self.colors['accent_primary']).pack(pady=2)
+                bg=self.colors['background_secondary']).pack(pady=2)
         
         # Ultra-minimaler Content
         conn_content = tk.Frame(conn_card, bg=self.colors['background_tertiary'])
@@ -531,8 +547,8 @@ class BertrandtGUI:
         client_card = tk.Frame(parent, bg=self.colors['background_tertiary'], relief='flat', borderwidth=1)
         client_card.pack(fill='x', padx=2, pady=3)
         
-        # Sehr kompakter Header
-        client_header = tk.Frame(client_card, bg=self.colors['accent_secondary'], height=20)
+        # Sehr kompakter Header - dunkler
+        client_header = tk.Frame(client_card, bg=self.colors['background_secondary'], height=20)
         client_header.pack(fill='x')
         client_header.pack_propagate(False)
         
@@ -540,7 +556,7 @@ class BertrandtGUI:
                 text="👥",
                 font=('Helvetica Neue', 10),
                 fg=self.colors['text_primary'],
-                bg=self.colors['accent_secondary']).pack(pady=2)
+                bg=self.colors['background_secondary']).pack(pady=2)
         
         # Kompakter Content
         client_content = tk.Frame(client_card, bg=self.colors['background_tertiary'])
@@ -549,7 +565,7 @@ class BertrandtGUI:
         self.client_label = tk.Label(client_content,
                                     text="0",
                                     font=('Helvetica Neue', 18, 'bold'),
-                                    fg=self.colors['accent_primary'],
+                                    fg=self.colors['text_primary'],
                                     bg=self.colors['background_tertiary'])
         self.client_label.pack()
         
@@ -565,8 +581,8 @@ class BertrandtGUI:
         signal_card = tk.Frame(parent, bg=self.colors['background_tertiary'], relief='flat', borderwidth=1)
         signal_card.pack(fill='x', padx=20, pady=15)
         
-        # Card Header
-        signal_header = tk.Frame(signal_card, bg=self.colors['accent_primary'], height=35)
+        # Card Header - dunkler
+        signal_header = tk.Frame(signal_card, bg=self.colors['background_secondary'], height=35)
         signal_header.pack(fill='x')
         signal_header.pack_propagate(False)
         
@@ -574,7 +590,7 @@ class BertrandtGUI:
                 text="📡 AKTUELLES SIGNAL",
                 font=self.fonts['button'],
                 fg=self.colors['text_primary'],
-                bg=self.colors['accent_primary']).pack(pady=8)
+                bg=self.colors['background_secondary']).pack(pady=8)
         
         # Signal Display mit Dark Theme
         self.current_signal_display = tk.Frame(signal_card, 
@@ -619,8 +635,8 @@ class BertrandtGUI:
         btn_card = tk.Frame(parent, bg=self.colors['background_tertiary'], relief='flat', borderwidth=1)
         btn_card.pack(fill='x', padx=20, pady=15)
         
-        # Card Header
-        btn_header = tk.Frame(btn_card, bg=self.colors['accent_primary'], height=35)
+        # Card Header - dunkler
+        btn_header = tk.Frame(btn_card, bg=self.colors['background_secondary'], height=35)
         btn_header.pack(fill='x')
         btn_header.pack_propagate(False)
         
@@ -628,7 +644,7 @@ class BertrandtGUI:
                 text="⚙️ SYSTEM STEUERUNG",
                 font=self.fonts['button'],
                 fg=self.colors['text_primary'],
-                bg=self.colors['accent_primary']).pack(pady=8)
+                bg=self.colors['background_secondary']).pack(pady=8)
         
         # Button Content
         btn_content = tk.Frame(btn_card, bg=self.colors['background_tertiary'])
@@ -682,16 +698,16 @@ class BertrandtGUI:
         flash_card = tk.Frame(parent, bg=self.colors['background_tertiary'], relief='flat', borderwidth=1)
         flash_card.pack(fill='x', padx=20, pady=15)
         
-        # Card Header
-        flash_header = tk.Frame(flash_card, bg=self.colors['accent_warning'], height=35)
+        # Card Header - dunkler
+        flash_header = tk.Frame(flash_card, bg=self.colors['background_secondary'], height=35)
         flash_header.pack(fill='x')
         flash_header.pack_propagate(False)
         
         tk.Label(flash_header,
                 text="🔧 ARDUINO FLASH-TOOL",
                 font=self.fonts['button'],
-                fg=self.colors['background_primary'],
-                bg=self.colors['accent_warning']).pack(pady=8)
+                fg=self.colors['text_primary'],
+                bg=self.colors['background_secondary']).pack(pady=8)
         
         # Flash Content
         flash_content = tk.Frame(flash_card, bg=self.colors['background_tertiary'])
@@ -718,7 +734,7 @@ class BertrandtGUI:
                       font=self.fonts['label'],
                       bg=self.colors['background_tertiary'],
                       fg=self.colors['text_primary'],
-                      selectcolor=self.colors['background_secondary'],
+                      selectcolor=self.colors['background_tertiary'],
                       activebackground=self.colors['background_tertiary'],
                       command=self.on_device_change).pack(side='left', padx=(0, 20))
         
@@ -729,7 +745,7 @@ class BertrandtGUI:
                       font=self.fonts['label'],
                       bg=self.colors['background_tertiary'],
                       fg=self.colors['text_primary'],
-                      selectcolor=self.colors['background_secondary'],
+                      selectcolor=self.colors['background_tertiary'],
                       activebackground=self.colors['background_tertiary'],
                       command=self.on_device_change).pack(side='left')
         
@@ -813,8 +829,8 @@ class BertrandtGUI:
         gui_card = tk.Frame(parent, bg=self.colors['background_tertiary'], relief='flat', borderwidth=1)
         gui_card.pack(fill='x', padx=20, pady=15)
         
-        # Card Header
-        gui_header = tk.Frame(gui_card, bg=self.colors['accent_secondary'], height=35)
+        # Card Header - dunkler
+        gui_header = tk.Frame(gui_card, bg=self.colors['background_secondary'], height=35)
         gui_header.pack(fill='x')
         gui_header.pack_propagate(False)
         
@@ -822,7 +838,7 @@ class BertrandtGUI:
                 text="🎮 MANUELLE STEUERUNG",
                 font=self.fonts['button'],
                 fg=self.colors['text_primary'],
-                bg=self.colors['accent_secondary']).pack(pady=8)
+                bg=self.colors['background_secondary']).pack(pady=8)
         
         # GUI Content
         gui_content = tk.Frame(gui_card, bg=self.colors['background_tertiary'])
@@ -909,7 +925,7 @@ class BertrandtGUI:
         # Status aktualisieren
         self.manual_status.config(
             text=f"Seite {page_id} ausgewählt: {page_name}",
-            fg=self.colors['accent_primary']
+            fg=self.colors['text_primary']
         )
         
         # Signal simulieren (funktioniert sowohl im Dev Mode als auch normal)
@@ -920,89 +936,202 @@ class BertrandtGUI:
             self.update_signal(page_id)
     
     def show_content_creator(self):
-        """Content Creator anzeigen - Erweiterte Content-Erstellung im Hauptfenster"""
-        # Multimedia-Display temporär ausblenden
+        """Content Creator als eigenen Bereich anzeigen"""
+        print("🎨 Content Creator wird gestartet...")
+        
+        # Alle anderen Bereiche ausblenden
         if hasattr(self, 'content_frame'):
             self.content_frame.pack_forget()
+            print("✅ content_frame ausgeblendet")
+        if hasattr(self, 'presentation_frame'):
+            self.presentation_frame.pack_forget()
+            print("✅ presentation_frame ausgeblendet")
+            
+        # Button-Zustände aktualisieren
+        if hasattr(self, 'creator_btn'):
+            self.creator_btn.config(bg=self.colors['accent_primary'], fg=self.colors['text_primary'])
+        if hasattr(self, 'presentation_btn'):
+            self.presentation_btn.config(bg=self.colors['background_primary'], fg=self.colors['text_secondary'])
         
-        # Content Creator Frame erstellen
-        self.creator_frame = tk.Frame(self.content_frame.master, bg=self.colors['background_tertiary'], relief='flat', borderwidth=2)
+        # Parent für Content Creator bestimmen
+        if hasattr(self, 'right_panel'):
+            parent = self.right_panel
+            print("✅ right_panel gefunden")
+        else:
+            parent = self.root
+            print("⚠️ right_panel nicht gefunden, verwende root")
+        
+        # Content Creator Frame erstellen - Dark Mode
+        self.creator_frame = tk.Frame(parent, bg=self.colors['background_primary'], relief='flat', borderwidth=0)
         self.creator_frame.pack(fill='both', expand=True, pady=(0, 10))
+        print("✅ creator_frame erstellt und gepackt")
         
-        # Header
-        header_frame = tk.Frame(self.creator_frame, bg=self.colors['background_secondary'], height=60)
+        # Creator als aktiv markieren
+        self.creator_active = True
+        
+        # Header - wie bei anderen Bereichen
+        header_frame = tk.Frame(self.creator_frame, bg=self.colors['background_secondary'], height=50)
         header_frame.pack(fill='x')
         header_frame.pack_propagate(False)
         
         header_label = tk.Label(header_frame,
                                text="✨ CONTENT CREATOR",
                                font=self.fonts['title'],
-                               fg=self.colors['accent_primary'],
+                               fg=self.colors['text_primary'],
                                bg=self.colors['background_secondary'])
         header_label.pack(pady=15)
         
-        # Zurück Button
-        back_btn = tk.Button(header_frame,
-                            text="← Zurück",
-                            font=self.fonts['button'],
-                            bg=self.colors['background_tertiary'],
-                            fg=self.colors['text_primary'],
-                            relief='flat',
-                            borderwidth=0,
-                            padx=15,
-                            pady=5,
-                            activebackground=self.colors['accent_primary'],
-                            activeforeground=self.colors['text_primary'],
-                            command=self.hide_content_creator)
-        back_btn.place(x=20, y=15)
-        
         # Main Content Frame
-        main_frame = tk.Frame(self.creator_frame, bg=self.colors['background_tertiary'])
+        main_frame = tk.Frame(self.creator_frame, bg=self.colors['background_primary'])
         main_frame.pack(fill='both', expand=True, padx=20, pady=10)
         
-        # Left Panel - Seiten-Auswahl
-        left_panel = tk.Frame(main_frame, bg=self.colors['background_secondary'], width=200)
-        left_panel.pack(side='left', fill='y', padx=(0, 10))
+        # Content Creator Info
+        info_frame = tk.Frame(main_frame, bg=self.colors['background_secondary'])
+        info_frame.pack(fill='x', pady=(0, 20))
+        
+        info_label = tk.Label(info_frame,
+                             text="🎬 FOLIEN CREATOR - Bearbeiten Sie Ihre Präsentations-Folien\n" + 
+                                  "📂 Ordner: " + self.content_dir,
+                             font=self.fonts['subtitle'],
+                             fg=self.colors['text_primary'],
+                             bg=self.colors['background_secondary'],
+                             justify='center')
+        info_label.pack(pady=15)
+        
+        # Ordner Info
+        folder_frame = tk.Frame(info_frame, bg=self.colors['background_secondary'])
+        folder_frame.pack(fill='x', pady=(0, 10))
+        
+        folder_structure = """
+📁 content/
+├── page_1_welcome/     → Folie1
+├── page_2_company/     → Folie2
+├── page_3_products/    → Folie3
+├── page_4_innovation/  → Folie4
+├── page_5_technology/  → Folie5
+├── page_6_references/  → Folie6
+├── page_7_team/       → Folie7
+├── page_8_career/     → Folie8
+├── page_9_contact/    → Folie9
+└── page_10_thanks/    → Folie10
+        """
+        
+        folder_label = tk.Label(folder_frame,
+                              text=folder_structure,
+                              font=('Courier', 10),
+                              fg=self.colors['text_secondary'],
+                              bg=self.colors['background_secondary'],
+                              justify='left')
+        folder_label.pack(padx=20)
+        
+        # Left Panel - Folien-Übersicht
+        left_panel = tk.Frame(main_frame, bg=self.colors['background_secondary'], width=300)
+        left_panel.pack(side='left', fill='y', padx=(0, 15))
         left_panel.pack_propagate(False)
         
-        # Seiten-Liste
+        # Folien-Liste Header
         pages_label = tk.Label(left_panel,
-                              text="📄 SEITEN",
+                              text="📄 FOLIEN AUSWÄHLEN",
                               font=self.fonts['button'],
                               fg=self.colors['text_primary'],
                               bg=self.colors['background_secondary'])
         pages_label.pack(pady=10)
         
-        # Seiten-Buttons
+        # Ordner öffnen Button
+        folder_btn = ttk.Button(left_panel,
+                               text="📂 CONTENT ORDNER ÖFFNEN",
+                               style='Secondary.TButton',
+                               command=self.open_content_folder)
+        folder_btn.pack(pady=(0, 10), padx=10)
+        
+        # Folien-Buttons mit Vorschau
         self.creator_selected_page = tk.IntVar(value=1)
+        
+        # Scrollbare Folien-Liste
+        canvas = tk.Canvas(left_panel, bg=self.colors['background_secondary'], highlightthickness=0)
+        scrollbar = tk.Scrollbar(left_panel, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=self.colors['background_secondary'])
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
         for signal_id, signal_info in self.signal_definitions.items():
-            page_btn = tk.Radiobutton(left_panel,
-                                     text=f"{signal_info['icon']} {signal_id}. {signal_info['name']}",
+            # Folien-Card erstellen
+            folie_frame = tk.Frame(scrollable_frame, bg=self.colors['background_tertiary'], relief='solid', borderwidth=1)
+            folie_frame.pack(fill='x', padx=5, pady=3)
+            
+            # Header mit Icon und Nummer
+            header_frame = tk.Frame(folie_frame, bg=self.colors['background_tertiary'])
+            header_frame.pack(fill='x', padx=5, pady=2)
+            
+            # Icon und Nummer
+            icon_label = tk.Label(header_frame,
+                                text=signal_info['icon'],
+                                font=('Helvetica Neue', 16),
+                                bg=self.colors['background_tertiary'])
+            icon_label.pack(side='left', padx=(5, 0))
+            
+            num_label = tk.Label(header_frame,
+                               text=f"Folie {signal_id}",
+                               font=self.fonts['button'],
+                               fg=self.colors['text_primary'],
+                               bg=self.colors['background_tertiary'])
+            num_label.pack(side='left', padx=5)
+            
+            # Radiobutton für Auswahl
+            page_btn = tk.Radiobutton(header_frame,
                                      variable=self.creator_selected_page,
                                      value=signal_id,
-                                     font=self.fonts['label'],
-                                     bg=self.colors['background_secondary'],
+                                     font=self.fonts['button'],
+                                     bg=self.colors['background_tertiary'],
                                      fg=self.colors['text_primary'],
-                                     selectcolor=signal_info['color'],
-                                     activebackground=self.colors['background_secondary'],
-                                     command=lambda: self.update_creator_content())
-            page_btn.pack(fill='x', padx=10, pady=2)
+                                     selectcolor=self.colors['background_tertiary'],
+                                     activebackground=self.colors['background_tertiary'],
+                                     command=lambda sid=signal_id: self.update_creator_content())
+            page_btn.pack(side='right', padx=5)
+            
+            # Folien-Info
+            info_frame = tk.Frame(folie_frame, bg=self.colors['background_tertiary'])
+            info_frame.pack(fill='x', padx=5, pady=(0, 5))
+            
+            # Folien-Name und Ordner
+            name_label = tk.Label(info_frame,
+                                text=signal_info['name'],
+                                font=self.fonts['subtitle'],
+                                fg=self.colors['text_primary'],
+                                bg=self.colors['background_tertiary'])
+            name_label.pack(anchor='w', padx=20)
+            
+            folder_label = tk.Label(info_frame,
+                                  text=f"📂 page_{signal_id}_{signal_info['content_type']}/",
+                                  font=('Courier', 9),
+                                  fg=self.colors['text_secondary'],
+                                  bg=self.colors['background_tertiary'])
+            folder_label.pack(anchor='w', padx=20)
         
-        # Right Panel - Content Editor
+        canvas.pack(side="left", fill="both", expand=True, padx=(5, 0))
+        scrollbar.pack(side="right", fill="y")
+        
+        # Right Panel - Folien-Editor
         right_panel = tk.Frame(main_frame, bg=self.colors['background_secondary'])
         right_panel.pack(side='right', fill='both', expand=True)
         
         # Editor Header
-        editor_header = tk.Frame(right_panel, bg=self.colors['accent_primary'], height=40)
+        editor_header = tk.Frame(right_panel, bg=self.colors['background_tertiary'], height=50)
         editor_header.pack(fill='x')
         editor_header.pack_propagate(False)
         
         self.creator_page_title = tk.Label(editor_header,
-                                          text="Seite 1 - Willkommen",
-                                          font=self.fonts['button'],
+                                          text="📝 Folie 1 - Willkommen bearbeiten",
+                                          font=self.fonts['subtitle'],
                                           fg=self.colors['text_primary'],
-                                          bg=self.colors['accent_primary'])
-        self.creator_page_title.pack(pady=10)
+                                          bg=self.colors['background_tertiary'])
+        self.creator_page_title.pack(pady=15)
         
         # Editor Content
         editor_content = tk.Frame(right_panel, bg=self.colors['background_secondary'])
@@ -1063,7 +1192,7 @@ class BertrandtGUI:
                           font=self.fonts['label'],
                           bg=self.colors['background_secondary'],
                           fg=self.colors['text_primary'],
-                          selectcolor=self.colors['background_tertiary'],
+                          selectcolor=self.colors['background_secondary'],
                           activebackground=self.colors['background_secondary']).pack(anchor='w')
         
         # Text Editor
@@ -1090,57 +1219,86 @@ class BertrandtGUI:
         self.creator_text_widget.pack(side='left', fill='both', expand=True)
         text_scrollbar.pack(side='right', fill='y')
         
-        # Buttons
-        button_frame = tk.Frame(self.creator_frame, bg=self.colors['background_tertiary'])
+        # Action Buttons
+        button_frame = tk.Frame(self.creator_frame, bg=self.colors['background_primary'])
         button_frame.pack(fill='x', padx=20, pady=20)
         
-        ttk.Button(button_frame,
+        # Linke Buttons - Folien-Aktionen
+        left_buttons = tk.Frame(button_frame, bg=self.colors['background_primary'])
+        left_buttons.pack(side='left')
+        
+        ttk.Button(left_buttons,
                   text="💾 SPEICHERN",
                   style='Success.TButton',
                   command=self.save_creator_content).pack(side='left', padx=(0, 10))
         
-        ttk.Button(button_frame,
+        ttk.Button(left_buttons,
                   text="👁️ VORSCHAU",
                   style='Primary.TButton',
                   command=self.preview_creator_content).pack(side='left', padx=(0, 10))
         
-        ttk.Button(button_frame,
-                  text="📁 ORDNER ÖFFNEN",
+        ttk.Button(left_buttons,
+                  text="📂 ORDNER ÖFFNEN",
                   style='Secondary.TButton',
                   command=self.open_creator_folder).pack(side='left', padx=(0, 10))
         
-        ttk.Button(button_frame,
-                  text="🏠 HAUPTANSICHT",
+        # Mittlere Buttons - Navigation
+        middle_buttons = tk.Frame(button_frame, bg=self.colors['background_primary'])
+        middle_buttons.pack(side='left', expand=True)
+        
+        ttk.Button(middle_buttons,
+                  text="⬅️ VORHERIGE FOLIE",
+                  style='Secondary.TButton',
+                  command=lambda: self.creator_selected_page.set(max(1, self.creator_selected_page.get() - 1))).pack(side='left', padx=5)
+        
+        ttk.Button(middle_buttons,
+                  text="➡️ NÄCHSTE FOLIE",
+                  style='Secondary.TButton',
+                  command=lambda: self.creator_selected_page.set(min(10, self.creator_selected_page.get() + 1))).pack(side='left', padx=5)
+        
+        # Rechte Buttons - System
+        right_buttons = tk.Frame(button_frame, bg=self.colors['background_primary'])
+        right_buttons.pack(side='right')
+        
+        ttk.Button(right_buttons,
+                  text="🔄 AKTUALISIEREN",
                   style='Warning.TButton',
-                  command=self.hide_content_creator).pack(side='right')
+                  command=self.update_creator_content).pack(side='right', padx=(10, 0))
         
         # Erste Seite laden
         self.creator_active = True
+        print("✅ Content Creator vollständig geladen")
         self.update_creator_content()
     
     def hide_content_creator(self):
-        """Content Creator ausblenden und zur Hauptansicht zurückkehren"""
+        """Content Creator ausblenden und zur HOME zurückkehren"""
         if hasattr(self, 'creator_frame'):
             self.creator_frame.destroy()
         
-        # Multimedia-Display wieder anzeigen
+        # Multimedia-Display wieder anzeigen (HOME)
         if hasattr(self, 'content_frame'):
             self.content_frame.pack(fill='both', expand=True, pady=(0, 10))
         
+        # Creator als inaktiv markieren und Button zurücksetzen
         self.creator_active = False
-        # Aktuelle Seite neu laden
-        self.load_content_page(self.current_page)
+        if hasattr(self, 'creator_btn'):
+            self.creator_btn.config(bg=self.colors['background_primary'], fg=self.colors['text_secondary'])
+            
+        # Zur Startseite zurückkehren
+        self.load_content_page(1)
     
     def update_creator_content(self):
         """Content Creator Inhalt aktualisieren"""
+        print(f"🔄 update_creator_content aufgerufen, creator_active: {getattr(self, 'creator_active', False)}")
         if not hasattr(self, 'creator_active') or not self.creator_active:
+            print("⚠️ Creator nicht aktiv, update abgebrochen")
             return
             
         page_id = self.creator_selected_page.get()
         signal_info = self.signal_definitions[page_id]
         
         # Header aktualisieren
-        self.creator_page_title.config(text=f"Seite {page_id} - {signal_info['name']}")
+        self.creator_page_title.config(text=f"📝 Folie {page_id} - {signal_info['name']} bearbeiten")
         
         # Content laden
         content_type = signal_info['content_type']
@@ -1194,7 +1352,7 @@ class BertrandtGUI:
         with open(config_path, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=2, ensure_ascii=False)
         
-        messagebox.showinfo("Erfolg", f"Seite {page_id} wurde gespeichert!")
+        messagebox.showinfo("Erfolg", f"✅ Folie {page_id} - {signal_info['name']} wurde gespeichert!\n\n📁 Gespeichert in: {page_dir}")
     
     def preview_creator_content(self):
         """Content Creator Vorschau anzeigen"""
@@ -1214,6 +1372,141 @@ class BertrandtGUI:
             os.makedirs(page_dir)
         
         self.open_page_folder(page_dir)
+    
+    def show_presentation_mode(self):
+        """Presentation Mode als eigenen Bereich anzeigen"""
+        # Alle anderen Bereiche ausblenden
+        if hasattr(self, 'content_frame'):
+            self.content_frame.pack_forget()
+        if hasattr(self, 'creator_frame'):
+            self.creator_frame.pack_forget()
+            
+        # Button-Zustände aktualisieren
+        if hasattr(self, 'presentation_btn'):
+            self.presentation_btn.config(bg=self.colors['accent_primary'], fg=self.colors['text_primary'])
+        if hasattr(self, 'creator_btn'):
+            self.creator_btn.config(bg=self.colors['background_primary'], fg=self.colors['text_secondary'])
+        
+        # Parent für Presentation bestimmen
+        if hasattr(self, 'right_panel'):
+            parent = self.right_panel
+        else:
+            parent = self.root
+        
+        # Presentation Frame erstellen
+        self.presentation_frame = tk.Frame(parent, bg=self.colors['background_primary'], relief='flat', borderwidth=2)
+        self.presentation_frame.pack(fill='both', expand=True, pady=(0, 10))
+        
+        # Presentation als aktiv markieren
+        self.presentation_active = True
+        
+        # Header
+        header_frame = tk.Frame(self.presentation_frame, bg=self.colors['background_secondary'], height=60)
+        header_frame.pack(fill='x')
+        header_frame.pack_propagate(False)
+        
+        header_label = tk.Label(header_frame,
+                               text="🎯 PRESENTATION MODE",
+                               font=self.fonts['title'],
+                               fg=self.colors['accent_primary'],
+                               bg=self.colors['background_secondary'])
+        header_label.pack(pady=15)
+        
+        # Zurück Button
+        back_btn = tk.Button(header_frame,
+                            text="← Zurück",
+                            font=self.fonts['button'],
+                            bg=self.colors['background_tertiary'],
+                            fg=self.colors['text_primary'],
+                            relief='flat',
+                            borderwidth=0,
+                            padx=15,
+                            pady=5,
+                            activebackground=self.colors['accent_primary'],
+                            activeforeground=self.colors['text_primary'],
+                            command=self.hide_presentation_mode)
+        back_btn.place(x=20, y=15)
+        
+        # Main Content Frame
+        main_frame = tk.Frame(self.presentation_frame, bg=self.colors['background_primary'])
+        main_frame.pack(fill='both', expand=True, padx=20, pady=10)
+        
+        # Presentation Controls
+        controls_frame = tk.Frame(main_frame, bg=self.colors['background_secondary'])
+        controls_frame.pack(fill='x', pady=(0, 20))
+        
+        # Vollbild Button
+        fullscreen_btn = tk.Button(controls_frame,
+                                  text="🖥️ Vollbild",
+                                  font=self.fonts['button'],
+                                  bg=self.colors['accent_primary'],
+                                  fg=self.colors['text_primary'],
+                                  relief='flat',
+                                  borderwidth=0,
+                                  padx=20,
+                                  pady=10,
+                                  command=self.toggle_fullscreen)
+        fullscreen_btn.pack(side='left', padx=10, pady=10)
+        
+        # Auto-Play Button
+        autoplay_btn = tk.Button(controls_frame,
+                                text="▶️ Auto-Play",
+                                font=self.fonts['button'],
+                                bg=self.colors['accent_secondary'],
+                                fg=self.colors['text_primary'],
+                                relief='flat',
+                                borderwidth=0,
+                                padx=20,
+                                pady=10,
+                                command=self.start_auto_demo)
+        autoplay_btn.pack(side='left', padx=10, pady=10)
+        
+        # Presentation Content
+        content_frame = tk.Frame(main_frame, bg=self.colors['background_secondary'])
+        content_frame.pack(fill='both', expand=True)
+        
+        # Aktuelle Seite in Presentation Mode anzeigen
+        self.load_presentation_content(content_frame)
+    
+    def hide_presentation_mode(self):
+        """Presentation Mode ausblenden und zur HOME zurückkehren"""
+        if hasattr(self, 'presentation_frame'):
+            self.presentation_frame.destroy()
+        
+        # Multimedia-Display wieder anzeigen (HOME)
+        if hasattr(self, 'content_frame'):
+            self.content_frame.pack(fill='both', expand=True, pady=(0, 10))
+        
+        # Presentation als inaktiv markieren und Button zurücksetzen
+        self.presentation_active = False
+        if hasattr(self, 'presentation_btn'):
+            self.presentation_btn.config(bg=self.colors['background_primary'], fg=self.colors['text_secondary'])
+            
+        # Zur Startseite zurückkehren
+        self.load_content_page(1)
+    
+    def load_presentation_content(self, parent_frame):
+        """Presentation Content laden"""
+        # Info Label
+        info_label = tk.Label(parent_frame,
+                             text=f"📄 Aktuelle Seite: {self.current_page}\n\n🎯 Presentation Mode aktiv\n\nVerwenden Sie die Navigation oder Auto-Play für die Präsentation.",
+                             font=self.fonts['body'],
+                             fg=self.colors['text_primary'],
+                             bg=self.colors['background_secondary'],
+                             justify='center')
+        info_label.pack(expand=True, pady=50)
+    
+    def toggle_fullscreen(self):
+        """Vollbild-Modus umschalten"""
+        try:
+            current_state = self.root.attributes('-fullscreen')
+            self.root.attributes('-fullscreen', not current_state)
+        except:
+            # Fallback für andere Systeme
+            if self.root.state() == 'zoomed':
+                self.root.state('normal')
+            else:
+                self.root.state('zoomed')
         
     def create_multimedia_display(self, parent):
         """Multimedia-Anzeige für Messestand"""
@@ -1291,10 +1584,10 @@ class BertrandtGUI:
                 # Beispiel-Konfiguration erstellen
                 config = {
                     "title": signal_info['name'],
-                    "subtitle": f"Seite {signal_id} - {signal_info['name']}",
+                    "subtitle": f"Folie {signal_id} - {signal_info['name']}",
                     "background_image": "",
                     "video": "",
-                    "text_content": f"Willkommen auf Seite {signal_id}: {signal_info['name']}\n\nHier können Sie Inhalte hinzufügen:\n• Bilder\n• Videos\n• Texte\n\nBearbeiten Sie die config.json in:\n{page_dir}",
+                    "text_content": f"Willkommen auf {signal_info['name']}\n\nHier können Sie Inhalte hinzufügen:\n• Bilder\n• Videos\n• Texte\n\nBearbeiten Sie die config.json in:\n{page_dir}",
                     "images": [],
                     "layout": "text_only"  # text_only, image_text, video_text, fullscreen_image, fullscreen_video
                 }
@@ -1532,8 +1825,11 @@ class BertrandtGUI:
         placeholder_label.pack(expand=True)
     
     def safe_page_select(self, page_id):
-        """Sichere Seitenauswahl mit Cleanup"""
+        """Sichere Seitenauswahl mit Cleanup - zeigt HOME an"""
         try:
+            # Alle anderen Bereiche ausblenden
+            self.show_home_area()
+            
             # Vorherige Seite cleanup
             if hasattr(self, 'current_page_id') and self.current_page_id != page_id:
                 self.cleanup_current_page()
@@ -1548,6 +1844,26 @@ class BertrandtGUI:
             print(f"🎯 Seite {page_id} erfolgreich geladen")
         except Exception as e:
             print(f"❌ Fehler beim Seitenwechsel: {e}")
+    
+    def show_home_area(self):
+        """HOME Bereich anzeigen und andere ausblenden"""
+        # Alle anderen Bereiche ausblenden
+        if hasattr(self, 'creator_frame'):
+            self.creator_frame.pack_forget()
+            self.creator_active = False
+        if hasattr(self, 'presentation_frame'):
+            self.presentation_frame.pack_forget()
+            self.presentation_active = False
+            
+        # Button-Zustände zurücksetzen
+        if hasattr(self, 'creator_btn'):
+            self.creator_btn.config(bg=self.colors['background_primary'], fg=self.colors['text_secondary'])
+        if hasattr(self, 'presentation_btn'):
+            self.presentation_btn.config(bg=self.colors['background_primary'], fg=self.colors['text_secondary'])
+        
+        # HOME Bereich anzeigen
+        if hasattr(self, 'content_frame'):
+            self.content_frame.pack(fill='both', expand=True, pady=(0, 10))
     
     def cleanup_current_page(self):
         """Aktuelle Seite ordnungsgemäß schließen"""
@@ -1638,7 +1954,7 @@ class BertrandtGUI:
         number_label = tk.Label(card_content,
                                text=str(signal_id),
                                font=('Helvetica Neue', 8, 'bold'),
-                               fg=signal_info['color'],
+                               fg=self.colors['text_primary'],
                                bg=self.colors['background_tertiary'])
         number_label.pack()
         
@@ -1680,7 +1996,7 @@ class BertrandtGUI:
         number_label = tk.Label(card_content,
                                text=f"SIGNAL {signal_id}",
                                font=self.fonts['button'],
-                               fg=signal_info['color'],
+                               fg=self.colors['text_primary'],
                                bg=self.colors['background_tertiary'])
         number_label.pack()
         
@@ -1722,7 +2038,7 @@ class BertrandtGUI:
         
         # Copyright (links)
         footer_text = tk.Label(footer_frame,
-                              text="© 2024 Bertrandt AG | ESP32 Monitor System v2.0 | Engineering tomorrow",
+                              text="© 2024 Bertrandt AG | Dynamic Messe Stand V3 | Interactive Exhibition System",
                               font=self.fonts['label'],
                               fg=self.colors['text_primary'],
                               bg=self.colors['background_secondary'])
@@ -1748,19 +2064,54 @@ class BertrandtGUI:
         location_label.pack(side='right')
         
     def setup_serial(self):
-        """Serial-Verbindung einrichten oder Dev Mode aktivieren"""
+        """Multi-Hardware-Verbindungen einrichten oder Dev Mode aktivieren"""
+        connected_devices = 0
+        
+        # ESP32.1 (Haupt-ESP32)
         try:
-            self.serial_connection = serial.Serial(self.esp32_port, 115200, timeout=1)
-            time.sleep(2)
-            self.connection_status.config(text="● Online", fg=self.colors['accent_secondary'])
+            self.serial_connections['esp32_1'] = serial.Serial(self.esp32_1_port, 115200, timeout=1)
+            connected_devices += 1
+            print(f"✅ ESP32.1 verbunden auf {self.esp32_1_port}")
+        except Exception as e:
+            print(f"❌ ESP32.1 nicht gefunden: {e}")
+        
+        # ESP32.2 (Addon)
+        try:
+            self.serial_connections['esp32_2'] = serial.Serial(self.esp32_2_port, 115200, timeout=1)
+            connected_devices += 1
+            print(f"✅ ESP32.2 verbunden auf {self.esp32_2_port}")
+        except Exception as e:
+            print(f"❌ ESP32.2 nicht gefunden: {e}")
+        
+        # ESP32.3 (Addon)
+        try:
+            self.serial_connections['esp32_3'] = serial.Serial(self.esp32_3_port, 115200, timeout=1)
+            connected_devices += 1
+            print(f"✅ ESP32.3 verbunden auf {self.esp32_3_port}")
+        except Exception as e:
+            print(f"❌ ESP32.3 nicht gefunden: {e}")
+        
+        # Arduino GIGA
+        try:
+            self.serial_connections['giga'] = serial.Serial(self.giga_port, 115200, timeout=1)
+            connected_devices += 1
+            print(f"✅ Arduino GIGA verbunden auf {self.giga_port}")
+        except Exception as e:
+            print(f"❌ Arduino GIGA nicht gefunden: {e}")
+        
+        time.sleep(2)
+        
+        if connected_devices > 0:
+            self.connection_status.config(text=f"● {connected_devices} Geräte", fg=self.colors['accent_secondary'])
             self.dev_mode = False
             self.start_serial_reading()
-        except Exception as e:
+            print(f"🔗 {connected_devices} Hardware-Geräte verbunden")
+        else:
             # Dev Mode aktivieren
             self.dev_mode = True
             self.connection_status.config(text="● Dev Mode", fg=self.colors['accent_warning'])
             self.start_dev_mode()
-            print(f"🔧 Dev Mode aktiviert - Keine Hardware gefunden: {e}")
+            print(f"🔧 Dev Mode aktiviert - Keine Hardware gefunden")
     
     def start_dev_mode(self):
         """Dev Mode starten - Simuliert Arduino-Signale"""
@@ -1956,23 +2307,20 @@ für den normalen Betrieb mit Arduino-Steuerung.
                 self.signal_history.pop(0)
                 
     def update_client_count(self, count):
-        """Client-Anzahl mit Bertrandt Styling aktualisieren"""
+        """Client-Anzahl mit einheitlichem Styling aktualisieren"""
         self.client_count = count
         self.client_label.config(text=str(count))
         
-        # Bertrandt Farben und Status je nach Anzahl
+        # Einheitliche Farben - keine farbliche Markierung
         if count == 0:
-            color = self.colors['accent_tertiary']
             status_text = "KEINE VERBINDUNG"
         elif count == 1:
-            color = self.colors['accent_secondary']
             status_text = "OPTIMAL VERBUNDEN"
         else:
-            color = self.colors['accent_primary']
             status_text = f"{count} CLIENTS AKTIV"
             
-        self.client_label.config(fg=color)
-        self.client_status_text.config(text=status_text, fg=color)
+        self.client_label.config(fg=self.colors['text_primary'])
+        self.client_status_text.config(text=status_text, fg=self.colors['text_primary'])
         
     def update_time(self):
         """Zeit im Header mit Bertrandt Format aktualisieren"""
@@ -1982,9 +2330,14 @@ für den normalen Betrieb mit Arduino-Steuerung.
         self.root.after(1000, self.update_time)
         
     def restart_connection(self):
-        """Verbindung neu starten"""
-        if self.serial_connection:
-            self.serial_connection.close()
+        """Alle Hardware-Verbindungen neu starten"""
+        # Alle bestehenden Verbindungen schließen
+        for device_name, connection in self.serial_connections.items():
+            if connection:
+                connection.close()
+                print(f"🔌 {device_name} Verbindung geschlossen")
+        
+        self.serial_connections.clear()
         self.setup_serial()
         
     def show_history(self):
@@ -2560,6 +2913,36 @@ für den normalen Betrieb mit Arduino-Steuerung.
         finally:
             self.root.after(0, lambda: self.flash_btn.config(state='normal', text="🚀 BEIDE GERÄTE FLASHEN"))
         
+    def ensure_main_screen_start(self):
+        """Sicherstellen, dass die Anwendung auf dem Main Screen (HOME) startet"""
+        print("🏠 Starte auf Main Screen (HOME)...")
+        
+        # Alle anderen Bereiche ausblenden
+        if hasattr(self, 'creator_frame'):
+            self.creator_frame.pack_forget()
+            self.creator_active = False
+        if hasattr(self, 'presentation_frame'):
+            self.presentation_frame.pack_forget()
+            self.presentation_active = False
+            
+        # Button-Zustände zurücksetzen
+        if hasattr(self, 'creator_btn'):
+            self.creator_btn.config(bg=self.colors['background_primary'], fg=self.colors['text_secondary'])
+        if hasattr(self, 'presentation_btn'):
+            self.presentation_btn.config(bg=self.colors['background_primary'], fg=self.colors['text_secondary'])
+        
+        # HOME Bereich sichtbar machen
+        if hasattr(self, 'content_frame'):
+            self.content_frame.pack(fill='both', expand=True, pady=(0, 10))
+        
+        # Explizit HOME-Seite laden (Seite 1)
+        self.load_content_page(1)
+        
+        # Navigation auf HOME setzen
+        self.update_navigation(1)
+        
+        print("✅ Main Screen (HOME) erfolgreich geladen")
+
     def run(self):
         """GUI starten"""
         try:

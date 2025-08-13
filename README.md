@@ -1,161 +1,218 @@
-# 🚀 Dynamic Messe Stand V2 - Bertrandt ESP32 System
+# Dynamic Messe Stand V4
 
-> **Professional Trade Show Presentation System with Arduino Integration**
+**Finale Version** - Bertrandt Interactive Display System mit modularer Architektur
 
-## 📋 System Overview
+## 🎯 Features
 
-**Signal Flow:** `Arduino GIGA → ESP32 (WiFi) → Mini PC (USB) → GUI Display`
+### ✅ Vollständige Funktionalität von V1
+- **Multi-Hardware Support**: ESP32 + Arduino GIGA Integration
+- **UDP-Kommunikation**: Drahtlose Signal-Übertragung
+- **Automatische Demo**: Zeitgesteuerte Präsentationen
+- **Content Creator**: Vollständiger Slide-Editor
+- **Manuelle Steuerung**: Präsentations-Kontrolle
+- **Hardware-Flash**: Firmware-Update Funktionen
 
-This system enables wireless control of multimedia presentations using Arduino hardware and a professional Python GUI interface.
+### ✅ Saubere Architektur von V3
+- **Modularer Aufbau**: Getrennte Core/Models/Services/UI
+- **Responsive Design**: Automatische Skalierung
+- **Theme System**: Light/Dark Mode Support
+- **Logging System**: Umfassende Protokollierung
+- **Error Handling**: Robuste Fehlerbehandlung
 
-## ⚡ Quick Start
+## 📁 Projekt-Struktur
 
-### 🎯 First Time Setup
+```
+Dynamic_Messe_Stand_V4/
+├── Python_GUI/
+│   ├── core/                 # Kern-Module
+│   │   ├── config.py        # Zentrale Konfiguration
+│   │   ├── theme.py         # Theme-Management
+│   │   └── logger.py        # Logging-System
+│   ├── models/              # Daten-Modelle
+│   │   ├── hardware.py      # Hardware-Verbindungen
+│   │   └── content.py       # Content-Management
+│   ├── services/            # Business-Logic
+│   │   └── demo.py          # Demo-Service
+│   ├── ui/                  # Benutzeroberfläche
+│   │   ├── main_window.py   # Haupt-Fenster
+│   │   ├── components/      # UI-Komponenten
+│   │   └── tabs/            # Tab-Implementierungen
+│   └── main.py              # Hauptanwendung
+├── Arduino/
+│   ├── GIGA_UDP_Sender/     # Arduino GIGA Code
+│   └── ESP32_UDP_Receiver/  # ESP32 Code
+└── content/                 # Slide-Inhalte
+```
+
+## 🚀 Installation & Start
+
+### Voraussetzungen
 ```bash
-# 1. Clone repository
-git clone https://github.com/MaverericksTesting/Dynamic_Messe_Stand_V2.git
-cd Dynamic_Messe_Stand_V2
+# Python 3.8+
+pip install tkinter pillow pyserial
 
-# 2. Run setup (installs everything)
-./setup_system.sh
-
-# 3. Restart terminal for USB permissions
-# 4. Connect Arduino devices
-# 5. Start system
-./start_system.sh
+# Hardware
+- Arduino GIGA R1 WiFi
+- ESP32 DevKit (1-3 Stück)
+- WiFi-Netzwerk "Bertrandt_Messe"
 ```
 
-### 🚀 Daily Usage
+### Schnellstart
 ```bash
-./start_system.sh  # Starts everything automatically
+cd Dynamic_Messe_Stand_V4/Python_GUI
+python main.py
 ```
 
-## 📁 Project Structure
-
-```
-Dynamic_Messe_Stand_V2/
-├── 📄 README.md                 # This file
-├── 📄 QUICK_START.md            # Quick reference
-├── 🚀 start_system.sh           # Main launcher
-├── 🔧 setup_system.sh           # One-time setup
-├── 📁 .vscode/                  # VSCode configuration
-├── 📁 Arduino/                  # Arduino projects
-│   ├── ESP32_UDP_Receiver/      # ESP32 WiFi receiver
-│   └── GIGA_UDP_Sender/         # Arduino GIGA sender
-├── 📁 Python_GUI/               # Main GUI application
-│   ├── Bertrandt_GUI.py         # Main application
-│   ├── requirements.txt         # Python dependencies
-│   └── content/                 # Presentation content
-└── 📁 docs/                     # Documentation
-```
-
-## 🎨 Features
-
-### 🖥️ Professional GUI
-- **Modern Design** - Clean, responsive interface
-- **Button-Based Control** - No keyboard required
-- **Real-Time Monitoring** - Live signal display
-- **Content Management** - Easy page editing
-
-### 🔧 Arduino Integration
-- **Integrated Flashing** - Flash devices from GUI
-- **Auto Port Detection** - Finds devices automatically
-- **Serial Monitoring** - Real-time debugging
-- **Error Handling** - Comprehensive error recovery
-
-### 📱 Presentation System
-- **10 Content Pages** - Customizable presentations
-- **Auto Demo Mode** - Automatic page cycling
-- **Manual Control** - Direct page selection
-- **Multimedia Support** - Images, videos, text
-
-## 🛠️ Hardware Requirements
-
-- **Arduino GIGA R1 WiFi** - Main controller
-- **ESP32 Development Board** - WiFi receiver
-- **Mini PC** - Ubuntu/Linux system
-- **2x USB Cables** - Device connections
-
-## 🔧 Development
-
-### VSCode Setup
+### Mit Hardware
 ```bash
-code .  # Opens project with full configuration
+python main.py --esp32-port /dev/ttyUSB0
 ```
 
-**Available Tasks (Ctrl+Shift+P → "Tasks"):**
-- 🚀 Start System
-- 🔧 Setup System  
-- 📱 Flash ESP32
-- 🔧 Flash GIGA
-- 🐍 Run Python GUI
-- 📊 Monitor ESP32/GIGA
-
-### Arduino IDE Integration
-- **Auto-configured** for ESP32 and GIGA
-- **IntelliSense** for Arduino libraries
-- **One-click compilation** and upload
-
-### Python Development
-- **Debug Configuration** ready
-- **Requirements** auto-installed
-- **Code Formatting** with Black
-- **Linting** with Pylint
-
-## 📊 Technical Details
-
-### Communication Protocol
-```
-GIGA → ESP32: UDP WiFi (192.168.4.1:4210)
-ESP32 → PC: Serial USB (115200 baud)
-Format: "SIGNAL:X" (X = 1-10)
-```
-
-### WiFi Configuration
-- **SSID:** TestNetz
-- **Password:** 12345678
-- **ESP32 IP:** 192.168.4.1
-
-## 🔍 Troubleshooting
-
-### Common Issues
+### Debug-Modus
 ```bash
-# Arduino not found
-arduino-cli board list
-sudo usermod -a -G dialout $USER
-
-# Python dependencies
-pip3 install -r Python_GUI/requirements.txt
-
-# USB permissions
-sudo chmod 666 /dev/tty*
+python main.py --debug
 ```
 
-### Debug Tools
+### Ohne Hardware
 ```bash
-# Monitor ESP32
-arduino-cli monitor -p /dev/ttyUSB0 -c baudrate=115200
-
-# Monitor GIGA
-arduino-cli monitor -p /dev/ttyACM0 -c baudrate=115200
-
-# Test Python GUI
-python3 Python_GUI/Bertrandt_GUI.py --esp32-port=/dev/ttyUSB0
+python main.py --no-hardware
 ```
 
-## 📞 Support
+## 🎮 Bedienung
 
-**For Issues:**
-1. Check hardware connections
-2. Run `./setup_system.sh` again
-3. Check logs in terminal output
-4. Verify USB permissions
+### Navigation
+- **F11**: Vollbild ein/aus
+- **ESC**: Vollbild verlassen
+- **Tab-Navigation**: HOME → DEMO → CREATOR → PRESENTATION
 
-**Development:**
-- VSCode: Full IDE integration
-- Arduino CLI: Command-line tools
-- Python: Debug and development tools
+### HOME Tab
+- **Demo Starten**: Automatische Präsentation
+- **Content Creator**: Slides bearbeiten
+- **Präsentation**: Manuelle Steuerung
+- **Hardware Status**: Verbindungsübersicht
+- **System Info**: Technische Details
+- **Hilfe**: Bedienungsanleitung
+
+### DEMO Tab
+- **▶️ Demo Starten/Stoppen**: Automatische Präsentation
+- **⏮️ Zurück / ⏭️ Weiter**: Manuelle Navigation
+- **Slide-Dauer**: Anzeigezeit pro Slide
+- **Endlos-Schleife**: Kontinuierliche Wiederholung
+
+### CREATOR Tab
+- **➕ Neue Slide**: Slide hinzufügen
+- **🗑️ Löschen**: Slide entfernen
+- **📝 Editor**: Titel, Inhalt, Layout bearbeiten
+- **💾 Speichern**: Änderungen sichern
+
+### PRESENTATION Tab
+- **🎯 Slide-Auswahl**: Direkte Slide-Anwahl
+- **⏮️ Vorherige / ⏭️ Nächste**: Navigation
+- **📡 Signal senden**: Hardware-Steuerung
+
+## 🔧 Konfiguration
+
+### Hardware-Ports (config.py)
+```python
+'esp32_1_port': '/dev/ttyUSB0',  # Haupt-ESP32
+'esp32_2_port': '/dev/ttyUSB1',  # ESP32.2
+'esp32_3_port': '/dev/ttyUSB2',  # ESP32.3
+'giga_port': '/dev/ttyACM0',     # Arduino GIGA
+```
+
+### WiFi-Einstellungen (Arduino)
+```cpp
+const char* ssid = "Bertrandt_Messe";
+const char* password = "Messe2024!";
+```
+
+### ESP32-IP-Adressen (GIGA)
+```cpp
+const char* esp32_ips[] = {
+  "192.168.1.100",  // ESP32-1
+  "192.168.1.101",  // ESP32-2
+  "192.168.1.102"   // ESP32-3
+};
+```
+
+## 📊 Status-Panel
+
+Das linke Status-Panel zeigt:
+- **🔌 Hardware**: Verbindungsstatus aller Geräte
+- **▶️ Demo Status**: Aktueller Demo-Zustand
+- **💻 System**: Zeit, Theme, Auflösung
+
+## 🎨 Theme-System
+
+- **Light Mode**: Standard-Theme (hell)
+- **Dark Mode**: Dunkles Theme
+- **Bertrandt Corporate**: Firmen-Farben (Blau #003366, Orange #FF6600)
+- **Responsive**: Automatische Skalierung
+
+## 🔍 Logging
+
+Logs werden gespeichert in:
+- **Konsole**: INFO-Level und höher
+- **Datei**: `logs/BertrandtGUI_YYYYMMDD.log` (DEBUG-Level)
+
+## 🛠️ Hardware-Integration
+
+### Arduino GIGA (UDP-Sender)
+- **WiFi-Verbindung**: Automatische Verbindung
+- **UDP-Broadcast**: Signale an alle ESP32s
+- **Serielle Steuerung**: Befehle von Python-GUI
+- **Status-LEDs**: Verbindungs- und Aktivitäts-Anzeige
+
+### ESP32 (UDP-Empfänger)
+- **Signal-Empfang**: UDP-Pakete verarbeiten
+- **Pin-Steuerung**: Hardware-Ausgänge aktivieren
+- **Heartbeat-Monitoring**: Verbindungsüberwachung
+- **Buzzer-Feedback**: Akustische Bestätigung
+
+## 🔄 Signal-Flow
+
+1. **GUI** → Slide-Wechsel
+2. **Python** → Serieller Befehl an GIGA
+3. **GIGA** → UDP-Broadcast an ESP32s
+4. **ESP32** → Hardware-Pin Aktivierung
+5. **Hardware** → Physische Aktion (LED, Relay, etc.)
+
+## 🆘 Troubleshooting
+
+### Hardware nicht verbunden
+```bash
+# Ports prüfen
+ls /dev/tty*
+
+# Ohne Hardware starten
+python main.py --no-hardware
+```
+
+### WiFi-Probleme
+- SSID/Passwort in Arduino-Code prüfen
+- ESP32 Serial Monitor für Debug-Ausgaben
+
+### Slide-Probleme
+- Content-Verzeichnis prüfen: `content/page_X/config.json`
+- Neue Slides über Creator-Tab erstellen
+
+## 📈 Erweiterungen
+
+Das modulare Design ermöglicht einfache Erweiterungen:
+- **Neue Hardware**: Models/hardware.py erweitern
+- **Neue UI-Komponenten**: ui/components/ hinzufügen
+- **Neue Services**: services/ erweitern
+- **Neue Themes**: core/theme.py anpassen
+
+## 🏆 Vorteile V4
+
+✅ **Beste aus beiden Welten**: Funktionalität von V1 + Architektur von V3  
+✅ **Wartbar**: Saubere Modul-Trennung  
+✅ **Erweiterbar**: Plugin-fähige Architektur  
+✅ **Robust**: Umfassendes Error-Handling  
+✅ **Benutzerfreundlich**: Intuitive Bedienung  
+✅ **Professionell**: Corporate Design + Logging  
 
 ---
 
-**🎯 Ready for Professional Trade Show Presentations!**
+**Dynamic Messe Stand V4** - Die finale, professionelle Lösung für interaktive Messestände! 🚀

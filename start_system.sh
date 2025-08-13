@@ -1,127 +1,54 @@
 #!/bin/bash
-# Bertrandt ESP32 GUI System Starter
-# Optimierte Version mit Arduino Flash-Funktionalität
+# Dynamic Messe Stand V4 - System Starter
+# Startet das komplette System mit Hardware-Unterstützung
 
-echo "Bertrandt ESP32 GUI-Steuerungssystem wird gestartet..."
-echo "=================================================="
+echo "🚀 Dynamic Messe Stand V4 - System wird gestartet..."
 
-# Farben für bessere Ausgabe
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# Arbeitsverzeichnis wechseln
+cd "$(dirname "$0")/Python_GUI"
 
-# Funktionen
-log_info() {
-    echo -e "${BLUE}INFO: $1${NC}"
-}
-
-log_success() {
-    echo -e "${GREEN}SUCCESS: $1${NC}"
-}
-
-log_warning() {
-    echo -e "${YELLOW}WARNING: $1${NC}"
-}
-
-log_error() {
-    echo -e "${RED}ERROR: $1${NC}"
-}
-
-# Arbeitsverzeichnis setzen
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
-
-# Prüfen ob Python verfügbar ist
-log_info "Prüfe Python3..."
+# Python-Pfad prüfen
 if ! command -v python3 &> /dev/null; then
-    log_error "Python3 ist nicht installiert!"
+    echo "❌ Python3 nicht gefunden! Bitte installieren."
     exit 1
 fi
-log_success "Python3 gefunden"
-
-# In GUI-Verzeichnis wechseln
-cd "Python_GUI"
 
 # Abhängigkeiten prüfen
-log_info "Prüfe Python-Abhängigkeiten..."
-if [ -d "venv" ]; then
-    log_info "Verwende Virtual Environment..."
-    source venv/bin/activate
-    python -c "import serial, tkinter" 2>/dev/null || {
-        log_warning "Installiere fehlende Abhängigkeiten..."
-        pip install pyserial
-    }
-else
-    log_warning "Kein Virtual Environment gefunden, verwende System Python..."
-    python3 -c "import serial, tkinter" 2>/dev/null || {
-        log_warning "Installiere fehlende Abhängigkeiten..."
-        pip3 install pyserial --break-system-packages
-    }
-fi
-log_success "Abhängigkeiten OK"
-
-# Arduino CLI prüfen (optional)
-log_info "Prüfe Arduino CLI..."
-if command -v arduino-cli &> /dev/null; then
-    log_success "Arduino CLI gefunden - Flash-Funktionen verfügbar"
-else
-    log_warning "Arduino CLI nicht gefunden - Flash-Funktionen in GUI verfügbar"
+echo "📦 Prüfe Python-Abhängigkeiten..."
+python3 -c "import tkinter, PIL, serial" 2>/dev/null
+if [ $? -ne 0 ]; then
+    echo "⚠️ Fehlende Abhängigkeiten werden installiert..."
+    pip3 install pillow pyserial
 fi
 
-# Verfügbare Ports anzeigen
-log_info "Suche verfügbare Geräte..."
-FOUND_PORTS=()
-
-# Linux/Mac Ports prüfen
-for port in /dev/ttyUSB* /dev/ttyACM* /dev/cu.usbserial* /dev/cu.usbmodem*; do
-    if [ -e "$port" ]; then
-        FOUND_PORTS+=("$port")
-    fi
-done
-
-if [ ${#FOUND_PORTS[@]} -eq 0 ]; then
-    log_warning "Keine Arduino-Geräte gefunden!"
-    log_info "Das ist OK - Sie können Geräte später in der GUI flashen"
-    ESP32_PORT="/dev/ttyUSB0"  # Default
+# Hardware-Ports prüfen
+echo "🔌 Prüfe Hardware-Verbindungen..."
+if [ -e "/dev/ttyUSB0" ]; then
+    echo "✅ ESP32 gefunden: /dev/ttyUSB0"
+    ESP32_PORT="/dev/ttyUSB0"
 else
-    log_success "Gefundene Ports: ${FOUND_PORTS[*]}"
-    
-    # Versuche ESP32 zu identifizieren (meist USB)
-    ESP32_PORT=""
-    for port in "${FOUND_PORTS[@]}"; do
-        if [[ "$port" == *"ttyUSB"* ]] || [[ "$port" == *"usbserial"* ]]; then
-            ESP32_PORT="$port"
-            break
-        fi
-    done
-    
-    # Falls kein USB-Port, nimm den ersten verfügbaren
+    echo "⚠️ ESP32 nicht gefunden - suche alternative Ports..."
+    ESP32_PORT=$(ls /dev/ttyUSB* 2>/dev/null | head -1)
     if [ -z "$ESP32_PORT" ]; then
-        ESP32_PORT="${FOUND_PORTS[0]}"
+        echo "❌ Kein ESP32 gefunden - starte ohne Hardware"
+        NO_HARDWARE="--no-hardware"
+    else
+        echo "✅ ESP32 gefunden: $ESP32_PORT"
     fi
-    
-    log_success "ESP32 Port gesetzt auf: $ESP32_PORT"
+fi
+
+if [ -e "/dev/ttyACM0" ]; then
+    echo "✅ Arduino GIGA gefunden: /dev/ttyACM0"
+else
+    echo "⚠️ Arduino GIGA nicht gefunden"
 fi
 
 # System starten
-log_info "Starte Bertrandt GUI mit integriertem Flash-Tool..."
-echo ""
-echo "GUI Features:"
-echo "   - ESP32 & Arduino GIGA Flash-Tool"
-echo "   - Automatische Port-Erkennung"
-echo "   - Live Signal-Monitoring"
-echo "   - Boot-Button Erinnerung für ESP32"
-echo ""
-
-# Use virtual environment if available, otherwise system python
-if [ -d "venv" ]; then
-    source venv/bin/activate
-    python Bertrandt_GUI.py --esp32-port="$ESP32_PORT"
-    deactivate
+echo "🖥️ Starte GUI..."
+if [ -n "$NO_HARDWARE" ]; then
+    python3 main.py $NO_HARDWARE
 else
-    python3 Bertrandt_GUI.py --esp32-port="$ESP32_PORT"
+    python3 main.py --esp32-port "$ESP32_PORT"
 fi
 
-log_info "System beendet."
+echo "👋 Dynamic Messe Stand V4 beendet"
